@@ -1,10 +1,12 @@
-var inquirer = require("inquirer");
-var mainFile = require("./askUser.js");
-var questionArr = mainFile.questionArr;
-var questionAnswer = require("./questionAnswer.js");
+const inquirer = require("inquirer");
+const mainFile = require("./askUser.js");
+const questionArr = mainFile.questionArr;
+const questionAnswer = require("./questionAnswer.json");
+const fs = require("fs");
+
 
 var ClozeCard = function(front, back) {
-  // if the front of the flash-card does not include the substring, console.log the following message
+  // if the front of the flash-card does not include the substring, console.log an error message
   if(!(front.trim()).includes(back.trim())) {
     console.log("Sorry, this isn't a valid flash-card");
   }
@@ -28,14 +30,9 @@ var ClozeCard = function(front, back) {
   questionArr.push(this);
 };
 
-
-// var newCard1 = new ClozeCard("The most expensive car in the world is the Koenigsegg CCXR Trevita", "Koenigsegg CCXR Trevita");
-// var newCard2 = new ClozeCard("The fastest car in the world is the Hennessey Venom GT", "Hennessey Venom GT");
-// var newCard3 = new ClozeCard("The powerhouse of the cell is the Mitochondria", "Mitochondria");
-
-var newCard1 = new ClozeCard(questionAnswer.questionA, questionAnswer.answerA);
-var newCard2 = new ClozeCard(questionAnswer.questionB, questionAnswer.answerB);
-var newCard3 = new ClozeCard(questionAnswer.questionC, questionAnswer.answerC);
+var newCard1 = new ClozeCard(questionAnswer[0].question, questionAnswer[0].answer);
+var newCard2 = new ClozeCard(questionAnswer[1].question, questionAnswer[1].answer);
+var newCard3 = new ClozeCard(questionAnswer[2].question, questionAnswer[2].answer);
 
 
 var makeFlashcard = function() {
@@ -51,29 +48,48 @@ var makeFlashcard = function() {
         {
           type: "input",
           message: "Please input your new flashcard(full question including answer)",
-          name: "question"
+          name: "question",
         },
         {
           type: "input",
           message: "Please input the answer to your question",
-          name: "answer"
+          name: "answer",
         }
 
       ]).then(function(data) {
+        if(!(data.question.trim()).includes(data.answer.trim())) {
+          console.log("========================");
+          console.log("Sorry, this isn't a valid flash-card");
+          console.log("========================");
+          console.log("Get ready to play!");
+          // mainFile.askUser(0);
+        }
+        else {
+          var newCard = new ClozeCard(data.question, data.answer);
+          console.log("========================");
+          console.log("Get ready to play!");
+          var userAnswers = {
+            questionD: data.question,
+            answerD: data.answer
+          };
+          fs.readFile("./questionAnswer.json", function(err, data) {
+            var json = JSON.parse(data);
+            json.push(userAnswers);
 
-        var newCard = new ClozeCard(data.question, data.answer);
-        console.log("========================");
-        console.log("Get ready to play!");
-        mainFile.askUser(0);
+            fs.writeFile("./questionAnswer.json", JSON.stringify(json) , function(err) {
+              if (err) throw err;
+            });
+          });
+          mainFile.askUser(0);
+          }
 
-      });
+        });
     }
     else {
       mainFile.askUser(0);
     }
 
   });
-
 };
 
 makeFlashcard();
